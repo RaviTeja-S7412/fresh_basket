@@ -283,6 +283,18 @@ class Mobile_api extends REST_Controller
 		}
 	}
 
+	public function personaldataupdate_post(){
+
+		$data = $this->user_model->personal_update($this->input->post());
+		if($data['status'])
+		{
+			$this->response($data, REST_Controller::HTTP_OK);
+		}else
+		{
+			$this->response($data, REST_Controller::HTTP_OK);
+		}	
+	}
+
 	public function passwordupdate_post()
 	{
 

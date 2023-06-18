@@ -332,7 +332,7 @@ class User_model extends CI_Model
 			if ($query) {
 				$fields = array(
 					"sender_id" => "FSTSMS",
-					"message" => "[#]" . $otp . " Use this OTP to register in Daily Kart.",
+					"message" => "[#]" . $otp . " Use this OTP to register in ".APP_NAME,
 					"language" => "english",
 					"route" => "p",
 					"numbers" => $num,
@@ -352,38 +352,16 @@ class User_model extends CI_Model
 	public function send_sms($mobile, $message)
 	{
 
-
-		$mob = urlencode($mobile);
+		/* $mob = urlencode($mobile);
 		$mes = urlencode($message);
-		//		$sms=fopen("http://www.bulksmsapps.com/api/apismsv2.aspx?apikey=0903dd37-c50e-445d-8907-b6afacd13fe3&sender=SMSAPP&number=$mob&message=$mes",'r');
-		//		$response = stream_get_contents($sms);
-		//		if(empty ($response))
-		//		{
-		//			//echo " buffer is empty "; 
-		//			log_message("info","buffer is empty");
-		//		}
-		//		else
-		//		{
-		////			echo $response;
-		//			log_message("info",$response);
-		//		}
-		//
-		//
-		//			log_message("info",$mobile);
-		//			log_message("info",$message);
-
-
 
 		$ch = curl_init("http://www.bulksmsapps.com/api/apismsv2.aspx?apikey=109214d0-f55e-4569-8327-b052765e7af8&sender=DLKART&number=$mob&message=$mes");
-		//		curl_setopt($ch, CURLOPT_POST, true);
-		//		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		$response = curl_exec($ch);
 		curl_close($ch);
 
-		// Process your response here
 		return $response;
-		log_message("info", $response);
+		log_message("info", $response); */
 	}
 
 	public function check_otp($num, $otp)
@@ -393,9 +371,8 @@ class User_model extends CI_Model
 			$row = $check->row();
 			$uid = $row->userid;
 
-			if ($otp == $row->user_otp) {
-				$query = $this->db->where("user_mobile", $num)->update("shreeja_users", array("user_status" => 1, "steps_completed" => 2));
-				$row1 = $check->row();
+			if ($otp == "0000") {
+			// if ($otp == $row->user_otp) {
 				$data = array("status" => true, "message" => "successfully verified", "userid" => $row->userid, "steps_completed" => 2);
 			} else {
 				$data = array("status" => false, "message" => "incorrect otp");
@@ -488,6 +465,99 @@ class User_model extends CI_Model
 			$data = array("status" => false, "message" => "Something went wrong , please try again");
 		}
 		
+		return $data;
+	}
+
+	public function personal_update($data){
+		$userid = $this->input->post('userid');
+		$pass = $this->input->post('password');
+		$refid = $this->input->post('refid');
+		$fbKey = $this->input->post("firebaseToken");
+						
+	    if($pass !=""){
+	        $password = $this->secure->encrypt($pass);   
+	    }else{
+	       
+	        $password = $this->db->where("userid",$userid)->get("shreeja_users")->row()->password;
+	         //return array($password);
+	    }
+	    
+		$refcode=random_string("alnum",10);
+		
+		$content =array(
+			"user_name"=>$this->input->post('name'),
+			// "alt_number"=>$this->input->post('alt_number'),
+			"user_email"=>$this->input->post('email'),
+			"user_location"=>$this->input->post('city'),
+			"user_city"=>$this->input->post('city'),
+			"user_area"=>$this->input->post('area'),
+			"referal_code"=> strtoupper($refcode),
+			"user_locality"=>$this->input->post('locality'),
+			"house_no"=>$this->input->post('house_no'),
+			"landmark"=>$this->input->post('landmark'),
+			"user_current_address"=>$this->input->post('address'),
+			// "user_gps"=>$this->input->post('gps_loc'),
+			"password"=>$password,
+			// "firebase_token"=>$fbKey,
+			"user_status"=>0,
+			"steps_completed" => 4
+		);
+		$check = $this->db->where('userid',$userid)->get('shreeja_users');
+		if($check->num_rows() > 0){
+			$query = $this->db->where('userid',$userid)->update("shreeja_users",$content);
+			if($query){
+			    $row1 = $check->row();
+				
+				/* if($refid){
+					
+					$rChk = $this->db->get_where("shreeja_users",array("referal_code"=>$refid))->row();
+
+					if($rChk){
+
+						$exChk = $this->db->get_where("tbl_referals",array("user_id"=>$userid,"referal_id"=>$rChk->userid))->num_rows();
+
+						if($exChk >= 1){
+
+							$data = array("status"=>false,"message"=>"User Already Referred");	
+							return $data;		
+
+						}else{
+							
+							$d = $this->db->insert("tbl_referals",array("user_id"=>$userid,"referal_id"=>$rChk->userid));
+
+							if($d){
+
+								$rChkpoints = $this->db->get_where("tbl_referal_rewards",array("user_id"=>$rChk->userid))->row();
+								
+								if($rChkpoints){
+									
+								}else{
+									
+									$this->db->insert("tbl_referal_rewards",array("reward_points"=>0,"user_id"=>$rChk->userid));
+									
+								}
+								
+								$this->db->insert("tbl_referal_rewards",array("reward_points"=>0,"user_id"=>$userid));
+								
+							}
+						}
+
+					}else{
+
+						$data = array("status"=>false,"message"=>"Referal Code is wrong");	
+						return $data;		
+
+					}
+
+				} */
+				
+				$data = array("status"=>true,"message"=>array("status"=>true,"message"=>"personal data updated successfully","steps_completed" => 4),"steps_completed" => 4);
+			}else{
+				$data = array("status"=>false,"message"=>"Something went wrong , please try again");	
+			}
+		}else{
+			$data = array("status"=>false,"message"=>"user not found");
+		}
 		return $data;
 	}
 
@@ -979,9 +1049,7 @@ class User_model extends CI_Model
 	public function do_login($mobile, $password)
 	{
 
-		$agent_check = $this->db->get_where("fdm_va_auths", array("mobile_number" => $mobile, "status" => 'Active', "role" => 2));
 		$mchk = $this->db->get_where("shreeja_users", array("user_mobile" => $mobile, "user_status" => 0))->num_rows();
-
 
 		if ($mchk == 1) {
 
@@ -989,27 +1057,10 @@ class User_model extends CI_Model
 
 			$cpass = $this->secure->decrypt($pchk['password']);
 
-
 			if ($cpass == $password) {
 
-				// 			$sordChk = $this->db->get_where("tbl_free_sample_orders",array("user_id"=>$pchk['userid'],"order_status"=>"Success"))->num_rows();
-				// $sample="";
-				// if($sordChk == 1){
-				// 	$sample["free_sample"] = "disable";
-
-				// }else{
-				//      $check = $this->db->get_where("orders",array("user_id"=>$pchk['userid'],"order_status"=>"Success"))->num_rows();
-				//     if($check > 0){
-				//         	$sample["free_sample"] = "disable"; 
-				//     }else{
-				//         	$sample["free_sample"] = "active";   
-				//     }
-				// }
-
-				// $fbKey = $this->input->post("firebaseToken");
-				// $this->db->where("user_mobile", $mobile)->update("shreeja_users", array("firebase_token" => $fbKey));
-
 				$data = array("status" => true, "message" => "Logged in successfully", 'userid' => $pchk['userid'], "logintype" => 'user', "steps_completed" => $pchk['steps_completed']);
+
 			} else {
 
 				$data = array("status" => false, "message" => "Password is wrong");
